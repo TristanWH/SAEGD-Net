@@ -1,0 +1,25 @@
+from __future__ import annotations
+
+import math
+import torch
+
+
+def linear_beta_schedule(timesteps: int, start: float = 1e-4, end: float = 0.02) -> torch.Tensor:
+    return torch.linspace(start, end, timesteps, dtype=torch.float32)
+
+
+def cosine_beta_schedule(timesteps: int, s: float = 0.008) -> torch.Tensor:
+    steps = timesteps + 1
+    x = torch.linspace(0, timesteps, steps, dtype=torch.float32)
+    alphas_cumprod = torch.cos(((x / timesteps) + s) / (1 + s) * math.pi * 0.5) ** 2
+    alphas_cumprod = alphas_cumprod / alphas_cumprod[0]
+    betas = 1 - (alphas_cumprod[1:] / alphas_cumprod[:-1])
+    return betas.clamp(0.0001, 0.9999)
+
+
+def make_beta_schedule(name: str, timesteps: int) -> torch.Tensor:
+    if name == "linear":
+        return linear_beta_schedule(timesteps)
+    if name == "cosine":
+        return cosine_beta_schedule(timesteps)
+    raise ValueError(f"Unknown beta schedule: {name}")
